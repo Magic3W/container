@@ -1,0 +1,15 @@
+{
+    "name": "spitfire/provider",
+    "license": "MIT",
+
+    "require": {
+        "php": ">7",
+        "psr/container": "^1.0"
+    },
+
+    "autoload" : {
+        "psr-4":{
+            "spitfire\\provider" : "/src"
+        }
+    }
+}
