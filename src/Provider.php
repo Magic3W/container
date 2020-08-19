@@ -1,5 +1,10 @@
 <?php namespace spitfire\provider;
 
+use Closure;
+use ReflectionClass;
+use ReflectionException;
+use ReflectionParameter;
+
 /**
  * Provider is a dependency injection mechanism. It allows your
  * application to request an instance of a certain class and it
@@ -11,7 +16,7 @@
 class Provider implements \Psr\Container\ContainerInterface
 {
 
-    private $items;
+    private $items = [];
     
     /**
      * The get method allows applications to retrieve a service the container
@@ -25,9 +30,33 @@ class Provider implements \Psr\Container\ContainerInterface
      * @throws \Psr\Container\NotFoundExceptionInterface
      * @throws \Psr\Container\ContainerExceptionInterface
      */
-    public function get($id)
-    {
+    public function get($id) {
+
+        $param = $this->items[$id]?? null;
+
+        if ($param instanceof Service)   { return $param->instance(); }
+        if ($param instanceof Closure)   { return $param(); }
+        if (is_string($param)) { return new $this->get($param); }
+        if (is_object($param)) { return $param; }
         
+        try {
+            #Autowiring logic
+            $reflection = new ReflectionClass($id);
+            $method     = $reflection->getMethod('__construct');
+            $required   = $method->getParameters();
+
+
+            $parameters = array_map(function (ReflectionParameter$e) {
+                $class = $e->getClass()->getName();
+                
+                return $this->get($class);
+            }, $required);
+            
+            return new $id(...$parameters);
+        }
+        catch (ReflectionException $e) {
+            return new $id;
+        }
     }
 
     /**
@@ -36,9 +65,9 @@ class Provider implements \Psr\Container\ContainerInterface
      * @param string $id   The key / classname the service should be located at
      * @param mixed  $item The service. May be an instance of a class, a string containing a classname, or a service
      */
-    public function set($id, $item)
-    {
-        
+    public function set($id, $item) {
+        $this->items[$id] = $item;
+        return $this;
     }
 
     /**
@@ -71,7 +100,8 @@ class Provider implements \Psr\Container\ContainerInterface
      * @param mixed[] $parameters
      */
     public function make($id, $parameters) {
-
+        $service = new Service($this, $id, $parameters);
+        return $service->instance();
     }
 
     /**
@@ -83,7 +113,28 @@ class Provider implements \Psr\Container\ContainerInterface
      * @return mixed The result of the function
      */
     public function call($fn) {
-        
+        //TODO : Implement
+    }
+
+    /**
+     * Creates a reference to a service inside this container.
+     * 
+     * @param string $id         The identifier for the service
+     * @param mixed  $parameters The identifier for the service
+     * @return Service 
+     */
+    public function service($id, $parameters) {
+        return new Service($this, $id, $parameters);
+    }
+
+    /**
+     * Creates a reference to a service inside this container.
+     * 
+     * @param string $id The identifier for the service
+     * @return Reference to the service
+     */
+    public function reference($id) {
+        return new Reference($this, $id);
     }
 
 }
