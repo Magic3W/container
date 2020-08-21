@@ -1,8 +1,10 @@
 <?php namespace spitfire\provider;
 
 use Closure;
+use Psr\Container\NotFoundExceptionInterface;
 use ReflectionClass;
 use ReflectionException;
+use ReflectionFunction;
 use ReflectionParameter;
 
 /**
@@ -31,32 +33,46 @@ class Provider implements \Psr\Container\ContainerInterface
      * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function get($id) {
-
-        $param = $this->items[$id]?? null;
-
-        if ($param instanceof Service)   { return $param->instance(); }
-        if ($param instanceof Closure)   { return $param(); }
-        if (is_string($param)) { return new $this->get($param); }
-        if (is_object($param)) { return $param; }
+        /**
+         * Check if there is a service registered for this
+         */
+        if (isset($this->items[$id])) {
+            return $this->items[$id]->instance();
+        }
         
+        /**
+         * The service is not preregistered, the container will fallback to attempting
+         * to locate the service with an autowiring automatism.
+         */
         try {
+
             #Autowiring logic
-            $reflection = new ReflectionClass($id);
-            $method     = $reflection->getMethod('__construct');
+            $method     = (new ReflectionClass($id))->getMethod('__construct');
             $required   = $method->getParameters();
 
 
             $parameters = array_map(function (ReflectionParameter$e) {
-                $class = $e->getClass()->getName();
-                
-                return $this->get($class);
+                try { return $this->get($e->getClass()->getName()); }
+                catch (ReflectionException $e) { throw new NotFoundException($e->getMessage()); }
             }, $required);
             
-            return new $id(...$parameters);
         }
         catch (ReflectionException $e) {
-            return new $id;
+            $parameters = [];
         }
+        catch (NotFoundExceptionInterface $e) {
+            throw new NotFoundException(sprintf("Service %s has missing dependencies", $id), 2008210958, $e);
+        }
+
+        /**
+         * The service is not available, the class was not found, if we try to instance
+         * the class, we will get a fatal error.
+         */
+        if (!class_exists($id)) {
+            throw new NotFoundException(sprintf("Service %s was not found", $id));
+        }
+
+        return new $id(...$parameters);
     }
 
     /**
@@ -66,6 +82,11 @@ class Provider implements \Psr\Container\ContainerInterface
      * @param mixed  $item The service. May be an instance of a class, a string containing a classname, or a service
      */
     public function set($id, $item) {
+
+        if (is_string($item) || is_object($item)) {
+            $item = new Service($this, $item, []);
+        }
+
         $this->items[$id] = $item;
         return $this;
     }
@@ -113,7 +134,12 @@ class Provider implements \Psr\Container\ContainerInterface
      * @return mixed The result of the function
      */
     public function call($fn) {
-        //TODO : Implement
+        $reflection = new ReflectionFunction($fn);
+        $parameters = array_map(function (ReflectionParameter $e) {
+            return $this->get($e->getClass()->getName());
+        }, $reflection->getParameters());
+
+        return $fn(...$parameters);
     }
 
     /**

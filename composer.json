@@ -1,5 +1,5 @@
 {
-    "name": "spitfire/provider",
+    "name": "spitfire/dependency-provider",
     "license": "MIT",
 
     "require": {

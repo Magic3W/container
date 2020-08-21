@@ -1,6 +1,7 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
+use spitfire\provider\NotFoundException;
 use spitfire\provider\Provider;
 
 
@@ -22,6 +23,12 @@ class C {
         #Doing nothing is okay here
         $this->a = $a;
         $this->b = $b;
+    }
+}
+class E {
+
+    public function __construct(D $d)
+    {
     }
 }
 
@@ -46,6 +53,23 @@ class ProviderTest extends TestCase
         $this->assertInstanceOf(B::class, $c->b);
         $this->assertInstanceOf(A::class, $c->b->a);
         $this->assertEquals($a, $c->a);
+    }
+
+    public function testCall() {
+        $provider = new Provider();
+
+        $c = $provider->call(function (C $c) {
+            $this->assertInstanceOf(C::class, $c);
+            $this->assertInstanceOf(B::class, $c->b);
+            $this->assertInstanceOf(A::class, $c->b->a);
+        });
+    }
+
+    public function testInvalidDependency() {
+        $provider = new Provider();
+
+        $this->expectException(NotFoundException::class);
+        $e = $provider->get(E::class);
     }
 
 }

@@ -2,6 +2,7 @@
 
 use Closure;
 use ReflectionClass;
+use ReflectionException;
 use ReflectionParameter;
 
 /**
@@ -45,24 +46,38 @@ class Service
      */
     public function instance() {
 
-        # Autowiring logic for the arguments
-        $reflection = new ReflectionClass($this->classname);
-        $method     = $reflection->getMethod('__construct');
-        $required   = $method->getParameters();
+        try {
+            # Autowiring logic for the arguments
+            $reflection = new ReflectionClass($this->classname);
+            $method     = $reflection->getMethod('__construct');
+            $required   = $method->getParameters();
 
-        $parameters = array_map(function (ReflectionParameter$e) {
-            $name  = $e->getName();
-            $class = $e->getClass()->getName();
-            $param = $this->parameters[$name]?? null;
+            $parameters = array_map(function (ReflectionParameter$e) {
+                $name  = $e->getName();
+                $param = $this->parameters[$name]?? null;
 
-            if ($param instanceof Reference) { return $param->resolve(); }
-            if ($param instanceof Closure)   { return $param(); }
-            if (is_string($param)) { return $this->provider->get($param); }
-            if (is_object($param)) { return $param; }
-            
-            return $this->provider->get($class);
-        }, $required);
+                if ($param instanceof Reference) { return $param->resolve(); }
+                if ($param instanceof Closure)   { return $param(); }
+                if (is_object($param)) { return $param; }
+                
+                try {
+                    return $this->provider->get($e->getClass()->getName());
+                }
+                catch (ReflectionException $e) {
+                    throw new NotFoundException($e->getMessage());
+                }
+            }, $required);
 
-        return $reflection->newInstance(...$parameters);
+            return $reflection->newInstance(...$parameters);
+        }
+        /**
+         * If the class does not have a constructor the reflection of __construct
+         * will fail. This is a trivial issue, since we do accept classes without
+         * an explicit constructor we can resolve this issue by instancing the class
+         * without parameters.
+         */
+        catch (ReflectionException $e) {
+            return new $this->classname;
+        }
     }
 }
