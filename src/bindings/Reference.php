@@ -1,4 +1,7 @@
-<?php namespace spitfire\provider;
+<?php namespace spitfire\provider\bindings;
+
+use spitfire\provider\BindingInterface;
+use spitfire\provider\Container;
 
 /**
  * A reference links a Provider instance with a service name. This 
@@ -7,11 +10,11 @@
  * 
  * @author César de la Cal Bretschneider
  */
-class Reference
+class Reference implements BindingInterface
 {
 
     /**
-     * @var Provider
+     * @var Container
      */
     private $container;
 
@@ -22,7 +25,12 @@ class Reference
      */
     private $key;
 
-    public function __construct($container, $key)
+	/**
+	 * 
+	 * @param Container $container
+	 * @param string $key
+	 */
+    public function __construct(Container $container, $key)
     {
         $this->container = $container;
         $this->key = $key;
@@ -32,7 +40,9 @@ class Reference
      * Performs a lookup on the linked container to locate the dependency or
      * service and returns it.
      */
-    public function resolve() {
+	public function instance() : object
+	{
         return $this->container->get($this->key);
-    }
+	}
+	
 }

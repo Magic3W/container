@@ -4,9 +4,15 @@
 
     "require": {
         "php": ">7",
-        "psr/container": "^1.0"
+        "psr/container": "^1.0",
+        "phpstan/phpstan": "^0.12.64"
     },
-
+	"scripts": {
+		"test" : [
+			"./vendor/bin/phpstan analyse --level 7 src/",
+			"./vendor/bin/phpunit tests/"
+		]
+	},
     "autoload" : {
         "psr-4":{
             "spitfire\\provider\\" : "./src"
