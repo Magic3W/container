@@ -49,6 +49,14 @@ class F {
     }
 }
 
+class G
+{
+	public function __construct(string $t = 'hello', A $a)
+	{
+		
+	}
+}
+
 class ProviderTest extends TestCase
 {
 
@@ -149,6 +157,32 @@ class ProviderTest extends TestCase
 		
 		$f = $provider->get(A::class);
 		$this->assertEquals($a->a, $f->a);
+	}
+	
+	/**
+	 * When a class, method or function contains default values, we should
+	 * avoid autowiring them if they are either unavailable or a scalar.
+	 */
+	public function testDefaults()
+	{
+		$provider = new Container();
+		$g = $provider->get(G::class);
+		
+		$this->assertInstanceOf(G::class, $g);
+	}
+	
+	/**
+	 * When a class, method or function contains default values, we should
+	 * avoid autowiring them if they are either unavailable or a scalar.
+	 */
+	public function testDefaults2()
+	{
+		$provider = new Container();
+		$provider->set(G::class, G::class);
+		
+		$g = $provider->get(G::class);
+		
+		$this->assertInstanceOf(G::class, $g);
 	}
 
 }

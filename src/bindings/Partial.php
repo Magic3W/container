@@ -117,8 +117,17 @@ class Partial implements BindingInterface
 
 				try {
 					$type = $e->getType();
-					if (!($type instanceof ReflectionNamedType)) {
-						throw new NotFoundException('Anonymous types cannot be resolved');
+						
+					if (!($type instanceof ReflectionNamedType)) { 
+						throw new NotFoundException('Anonymous types cannot be resolved'); 
+					}
+					
+					/**
+					 * In case we have a built-in type that does not require being set by the user
+					 * because a default value is available, we resort to using that.
+					 */
+					if ($type->isBuiltin() && $e->isDefaultValueAvailable()) {
+						return $e->getDefaultValue();
 					}
 
 					$name = $type->getName();

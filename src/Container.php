@@ -129,14 +129,14 @@ class Container implements \Psr\Container\ContainerInterface
 	public function set($id, $item)
 	{
 		
-		if (is_string($item) && class_exists($item)) {
-			$item = new Partial($this, $item, []);
-		}
-		
 		if (is_object($item)) {
 			$item = new Singleton(function () use ($item) {
 				return $item;
 			});
+		}
+		
+		if (is_string($item) && class_exists($item)) {
+			$item = new Partial($this, $item, []);
 		}
 
 		$this->items[$id] = $item;
