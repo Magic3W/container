@@ -3,7 +3,6 @@
 use PHPUnit\Framework\TestCase;
 use spitfire\provider\Container;
 use spitfire\provider\NotFoundException;
-use spitfire\provider\Provider;
 
 
 class A {

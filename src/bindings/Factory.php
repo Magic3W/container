@@ -13,21 +13,14 @@ class Factory implements BindingInterface
 	 */
 	private $factory;
 	
-	/**
-	 * 
-	 * @var Container
-	 */
-	private $container;
-	
-	public function __construct(Container $container, Closure $factory)
+	public function __construct(Closure $factory)
 	{
-		$this->container = $container;
 		$this->factory = $factory;
 	}
 	
-	public function instance() : object
+	public function instance(Container $container) : object
 	{
-		return $this->container->call($this->factory);
+		return $container->call($this->factory);
 	}
 	
 }

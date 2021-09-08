@@ -16,10 +16,10 @@ class Singleton extends Factory
 	/**
 	 * @return object
 	 */
-	public function instance() : object
+	public function instance(Container $provider) : object
 	{
 		if ($this->instance === null) {
-			$this->instance = parent::instance();
+			$this->instance = parent::instance($provider);
 		}
 		
 		return $this->instance;

@@ -14,25 +14,18 @@ class Reference implements BindingInterface
 {
 
     /**
-     * @var Container
-     */
-    private $container;
-
-    /**
      * The key identifying the class or service within provider.
      * 
-     * @var string
+     * @var class-string
      */
     private $key;
 
 	/**
 	 * 
-	 * @param Container $container
-	 * @param string $key
+	 * @param class-string $key
 	 */
-    public function __construct(Container $container, $key)
+    public function __construct($key)
     {
-        $this->container = $container;
         $this->key = $key;
     }
 
@@ -40,9 +33,9 @@ class Reference implements BindingInterface
      * Performs a lookup on the linked container to locate the dependency or
      * service and returns it.
      */
-	public function instance() : object
+	public function instance(Container $container) : object
 	{
-        return $this->container->get($this->key);
+        return $container->get($this->key);
 	}
 	
 }
