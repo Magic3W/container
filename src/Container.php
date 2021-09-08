@@ -38,6 +38,7 @@ class Container implements \Psr\Container\ContainerInterface
 	public function __construct(Container $prototype = null)
 	{
 		$this->prototype = $prototype;
+		$this->items[Container::class] = new Singleton(function () { return $this; });
 	}
 
 	/**
