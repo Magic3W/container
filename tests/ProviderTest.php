@@ -57,6 +57,16 @@ class G
 	}
 }
 
+class H
+{
+	public $t;
+	
+	public function __construct($t = 'hello', A $a)
+	{
+		$this->t = $t;
+	}
+}
+
 class ProviderTest extends TestCase
 {
 
@@ -137,7 +147,7 @@ class ProviderTest extends TestCase
 	
 	public function testPartials() {
 		$provider = new Container();
-		$provider->service(F::class)->needs('hello', 'world');
+		$provider->service(F::class)->with('hello', 'world');
 		
 		$f = $provider->get(F::class);
 		$this->assertEquals('world', $f->a->a);
@@ -183,6 +193,55 @@ class ProviderTest extends TestCase
 		$g = $provider->get(G::class);
 		
 		$this->assertInstanceOf(G::class, $g);
+	}
+	
+	
+	public function testDefaults3()
+	{
+		$provider = new Container();
+		$h = $provider->get(H::class);
+		
+		$this->assertInstanceOf(H::class, $h);
+	}
+	
+	
+	public function testInjectingDefaults()
+	{
+		$provider = new Container();
+		$provider->service(H::class)->with('t', 'test');
+		
+		$h = $provider->get(H::class);
+		
+		$this->assertInstanceOf(H::class, $h);
+		$this->assertEquals('test', $h->t);
+	}
+	
+	/**
+	 * This test is a bit more intricate than the others. Here we do the following:
+	 * 
+	 * * We define that objects of class B are to instanced with an A that contains
+	 *   a property a with the value 'hello'
+	 * * We also instance a object of type C, which contains a B and an A
+	 * * We expect that all the objects of type B have a object of type A with the 
+	 *   property a set to 'hello'. Including those inside a C
+	 * * We expect the objects of type A to have their property a to be empty if 
+	 *   they are contained within a object of type C
+	 */
+	public function testInjectingDefaults2()
+	{
+		$a = new A;
+		$a->a = 'hello';
+		
+		$provider = new Container();
+		$provider->service(B::class)->needs(A::class, $a);
+		
+		$b = $provider->get(B::class);
+		$c = $provider->get(C::class);
+		
+		$this->assertInstanceOf(B::class, $b);
+		$this->assertEquals('hello', $b->a->a);
+		$this->assertEquals('hello', $c->b->a->a);
+		$this->assertEquals('', $c->a->a);
 	}
 
 }

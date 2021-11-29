@@ -22,12 +22,6 @@ class Partial implements BindingInterface
 {
 
 	/**
-	 * 
-	 * @var Container
-	 */
-	private $provider;
-	
-	/**
 	 * The name of the class to be instanced
 	 * 
 	 * @var class-string
@@ -45,13 +39,11 @@ class Partial implements BindingInterface
 	 * Create a service. This allows the application to resolve the
 	 * parameters for the given service.
 	 * 
-	 * @param Container $provider
 	 * @param class-string $classname
 	 * @param mixed[] $parameters
 	 */
-	public function __construct(Container $provider, $classname, $parameters)
+	public function __construct($classname, $parameters)
 	{
-		$this->provider = $provider;
 		$this->classname = $classname;
 		$this->parameters = $parameters;
 	}
@@ -60,7 +52,7 @@ class Partial implements BindingInterface
 	 * Allows to generate expressive
 	 * 
 	 * @param string $name
-	 * @param mixed $payload
+	 * @param object $payload
 	 * @throws NotFoundException
 	 * @return Partial
 	 */
@@ -71,21 +63,40 @@ class Partial implements BindingInterface
 			$reflection = new ReflectionClass($this->classname);
 			$method     = $reflection->getMethod('__construct');
 			$params     = $method->getParameters();
+			$found      = false;
 
 			foreach ($params as $param) {
 				$type = $param->getType();
 
 				if ($type instanceof ReflectionNamedType && $type->getName()) {
 					$this->parameters[$param->getName()] = $payload;
-					return $this;
+					$found = true;
 				}
+			}
+			
+			if ($found) {
+				return $this;
 			}
 
 			throw new NotFoundException(sprintf('Class %s does not depend on %s', $this->classname, $name));
 		} else {
-			$this->parameters[$name] = $payload;
-			return $this;
+			throw new NotFoundException(sprintf('Class %s does not exist', $name));
 		}
+	}
+	
+	/**
+	 * The with method allows the user to determine defaults to be applied to a
+	 * certain class' parameters.
+	 * 
+	 * @param string $name
+	 * @param mixed $payload
+	 * @throws NotFoundException
+	 * @return Partial
+	 */
+	public function with($name, $payload) : Partial
+	{
+		$this->parameters[$name] = $payload;
+		return $this;
 	}
 
 	/**
@@ -118,7 +129,24 @@ class Partial implements BindingInterface
 				try {
 					$type = $e->getType();
 						
+					/**
+					 * PHP doesn't require the developer of a class to explicitly determine the 
+					 * types of the arguments. If this is the case, we cannot help the instancing 
+					 * of the class beyond using a default if available.
+					 */
 					if (!($type instanceof ReflectionNamedType)) { 
+						/**
+						 * If the developer didn't explicitly set the type, we check if they provided a
+						 * default value that the application can use to invoke the object. 
+						 * 
+						 * This is for methods that look like this: `public function __construct($t = 'hello')`
+						 * 
+						 * Notice in the example that $t does not have a type declaration.
+						 */
+						if ($e->isDefaultValueAvailable()) {
+							return $e->getDefaultValue();
+						}
+						
 						throw new NotFoundException('Anonymous types cannot be resolved'); 
 					}
 					
@@ -129,9 +157,16 @@ class Partial implements BindingInterface
 					if ($type->isBuiltin() && $e->isDefaultValueAvailable()) {
 						return $e->getDefaultValue();
 					}
-
+					
 					$name = $type->getName();
-					assert(class_exists($name));
+					
+					/**
+					 * If the class we're trying to locate is unavailable, we will not continue, since
+					 * it will obviously produce no valid result.
+					 */
+					if (!class_exists($name)) {
+						throw new NotFoundException(sprintf("Service %s was not found", $name));
+					}
 
 					return $container->get($name);
 				} catch (ReflectionException $e) {
