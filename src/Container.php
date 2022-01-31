@@ -20,7 +20,7 @@ use spitfire\provider\bindings\Singleton;
  */
 class Container implements \Psr\Container\ContainerInterface
 {
-
+	
 	/**
 	 * The prototype allows our service provider to override certain elements of another
 	 * service provider without 
@@ -28,19 +28,21 @@ class Container implements \Psr\Container\ContainerInterface
 	 * @var Container|null
 	 */
 	private $prototype = null;
-
+	
 	/**
 	 * 
 	 * @var BindingInterface[]
 	 */
 	private $items = [];
-
+	
 	public function __construct(Container $prototype = null)
 	{
 		$this->prototype = $prototype;
-		$this->items[Container::class] = new Singleton(function () { return $this; });
+		$this->items[Container::class] = new Singleton(function () {
+			return $this;
+		});
 	}
-
+	
 	/**
 	 * The get method allows applications to retrieve a service the container
 	 * provides. Please note that attempts to retrieve a service unknown to the
@@ -67,11 +69,11 @@ class Container implements \Psr\Container\ContainerInterface
 			assert($this->items[$id] instanceof BindingInterface);
 			return $this->items[$id]->instance($this);
 		}
-
+		
 		if ($this->prototype) {
 			return $this->prototype->getIn($id, $this);
 		}
-
+		
 		/**
 		 * The service is not preregistered, the container will fallback to attempting
 		 * to locate the service with an autowiring automatism.
@@ -79,7 +81,7 @@ class Container implements \Psr\Container\ContainerInterface
 		$partial = new Partial($id, []);
 		return $partial->instance($this);
 	}
-
+	
 	/**
 	 * The get method allows applications to retrieve a service the container
 	 * provides. Please note that attempts to retrieve a service unknown to the
@@ -107,11 +109,11 @@ class Container implements \Psr\Container\ContainerInterface
 			assert($this->items[$id] instanceof BindingInterface);
 			return $this->items[$id]->instance($container);
 		}
-
+		
 		if ($this->prototype) {
 			return $this->prototype->getIn($id, $container);
 		}
-
+		
 		/**
 		 * The service is not preregistered, the container will fallback to attempting
 		 * to locate the service with an autowiring automatism.
@@ -119,7 +121,7 @@ class Container implements \Psr\Container\ContainerInterface
 		$partial = new Partial($id, []);
 		return $partial->instance($container);
 	}
-
+	
 	/**
 	 * The set method allows the application to define a service for a certain key.
 	 * 
@@ -139,12 +141,12 @@ class Container implements \Psr\Container\ContainerInterface
 		if (is_string($item) && class_exists($item)) {
 			$item = new Partial($item, []);
 		}
-
+		
 		$this->items[$id] = $item;
 		return $this;
 	}
-
-
+	
+	
 	/**
 	 * 
 	 * @param string $id
@@ -160,10 +162,10 @@ class Container implements \Psr\Container\ContainerInterface
 		if ($this->items[$id] instanceof Partial) {
 			return $this->items[$id];
 		}
-
+		
 		throw new NotFoundException('Invalid partial');
 	}
-
+	
 	/**
 	 * 
 	 * @param string $id
@@ -175,8 +177,8 @@ class Container implements \Psr\Container\ContainerInterface
 		$this->items[$id] = new Factory($callable);
 		return $this;
 	}
-
-
+	
+	
 	/**
 	 * 
 	 * @param string $id
@@ -188,7 +190,7 @@ class Container implements \Psr\Container\ContainerInterface
 		$this->items[$id] = new Singleton($callable);
 		return $this;
 	}
-
+	
 	/**
 	 * Checks if the provider can find a service that it can assemble. This does
 	 * not imply that a call to get will be smooth, get may still run into a 
@@ -206,14 +208,14 @@ class Container implements \Psr\Container\ContainerInterface
 		if (array_key_exists($id, $this->items)) {
 			return true;
 		}
-
+		
 		/**
 		 * Otherwise, we make sure that the class exists. If the class can be
 		 * found, we assume that the service can be constructed
 		 */
 		return class_exists($id);
 	}
-
+	
 	/**
 	 * Uses the container as a factory, you provide arguments that may not be
 	 * automatically resolved or you wish to override.
@@ -227,7 +229,7 @@ class Container implements \Psr\Container\ContainerInterface
 		$service = new Partial($id, $parameters);
 		return $service->instance($this);
 	}
-
+	
 	/**
 	 * Call makes it possible for applications to pass a closure with a certain
 	 * set of requirements, similar to how Javascript DI works, and our container
@@ -240,22 +242,22 @@ class Container implements \Psr\Container\ContainerInterface
 	{
 		$reflection = new ReflectionFunction($fn);
 		$parameters = array_map(function (ReflectionParameter $e) {
-
+			
 			#Get the named type to build. It is impossible for us to build anonymous types
 			$type = $e->getType();
 			if (!($type instanceof ReflectionNamedType)) {
 				throw new NotFoundException('Unnamed types cannot be resolved by provider');
 			}
-
+			
 			$name = $type->getName();
 			assert(class_exists($name));
-
+			
 			return $this->get($name);
 		}, $reflection->getParameters());
-
+		
 		return $fn(...$parameters);
 	}
-
+	
 	/**
 	 * Invokes a method on an object, providing all the dependencies necessary to 
 	 * make the method work.
@@ -274,27 +276,27 @@ class Container implements \Psr\Container\ContainerInterface
 	{
 		$reflection = (new ReflectionClass($object))->getMethod($method);
 		$parameters = array_map(function (ReflectionParameter $e) use ($params) {
-
+			
 			#If the parameter was provided as an override by the user, we can just use that
 			if (array_key_exists($e->getName(), $params)) {
 				return $params[$e->getName()];
 			}
-
+			
 			#Get the named type to build. It is impossible for us to build anonymous types
 			$type = $e->getType();
 			if (!($type instanceof ReflectionNamedType)) {
 				throw new NotFoundException('Unnamed types cannot be resolved by provider');
 			}
-
+			
 			$name = $type->getName();
 			assert(class_exists($name));
-
+			
 			return $this->get($name);
 		}, $reflection->getParameters());
-
+		
 		return $object->$method(...$parameters);
 	}
-
+	
 	/**
 	 * Creates a reference to a service inside this container.
 	 * 

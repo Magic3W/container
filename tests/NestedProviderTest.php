@@ -45,7 +45,7 @@ class NestedProviderTest extends TestCase
 		$childB  = $child->get(B::class);
 		
 		$this->assertEquals('parent', $parentB->a->a);
-		$this->assertEquals('child',  $childB->a->a);
+		$this->assertEquals('child', $childB->a->a);
 	}
 	
 	public function testProtypes()
@@ -55,6 +55,6 @@ class NestedProviderTest extends TestCase
 		
 		
 		$this->assertEquals($parent, $parent->get(Container::class));
-		$this->assertEquals($child,  $child->get(Container::class));
+		$this->assertEquals($child, $child->get(Container::class));
 	}
 }

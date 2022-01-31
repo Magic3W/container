@@ -24,5 +24,4 @@ class Singleton extends Factory
 		
 		return $this->instance;
 	}
-	
 }

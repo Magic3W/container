@@ -4,56 +4,60 @@ use PHPUnit\Framework\TestCase;
 use spitfire\provider\Container;
 use spitfire\provider\NotFoundException;
 
-
-class A {
+class A
+{
 	public $a;
 }
-class B {
-    public $a;
-    public function __construct(A $a)
-    {
-        #Doing nothing is okay here
-        $this->a = $a;
+class B
+{
+	public $a;
+	public function __construct(A $a)
+	{
+		#Doing nothing is okay here
+		$this->a = $a;
 	}
 	
-	public function method(A $a, string $str) {
+	public function method(A $a, string $str)
+	{
 		return $this->a->a . $str == $a->a;
 	}
 }
-class C {
-    public $a;
-    public $b;
+class C
+{
+	public $a;
+	public $b;
 
-    public function __construct(A $a, B $b)
-    {
-        #Doing nothing is okay here
-        $this->a = $a;
-        $this->b = $b;
-    }
+	public function __construct(A $a, B $b)
+	{
+		#Doing nothing is okay here
+		$this->a = $a;
+		$this->b = $b;
+	}
 }
-class E {
+class E
+{
 
-    public function __construct(D $d)
-    {
+	public function __construct(D $d)
+	{
 		return $d;
-    }
+	}
 }
-class F {
+class F
+{
 
 	public $a;
 	
-    public function __construct(A $a, string $hello)
-    {
+	public function __construct(A $a, string $hello)
+	{
 		$a->a = $hello;
 		$this->a = $a;
-    }
+	}
 }
 
 class G
 {
 	public function __construct(string $t = 'hello', A $a)
 	{
-		
 	}
 }
 
@@ -70,35 +74,38 @@ class H
 class ProviderTest extends TestCase
 {
 
-    public function testGet() {
-        $provider = new Container();
-        $b = $provider->get(B::class);
+	public function testGet()
+	{
+		$provider = new Container();
+		$b = $provider->get(B::class);
 
-        $this->assertInstanceOf(B::class, $b);
-        $this->assertInstanceOf(A::class, $b->a);
-    }
+		$this->assertInstanceOf(B::class, $b);
+		$this->assertInstanceOf(A::class, $b->a);
+	}
 
-    public function testMake() {
-        $provider = new Container();
+	public function testMake()
+	{
+		$provider = new Container();
 
-        $a = new A();
-        $c = $provider->assemble(C::class, ['a' => $a]);
+		$a = new A();
+		$c = $provider->assemble(C::class, ['a' => $a]);
 
-        $this->assertInstanceOf(C::class, $c);
-        $this->assertInstanceOf(B::class, $c->b);
-        $this->assertInstanceOf(A::class, $c->b->a);
-        $this->assertEquals($a, $c->a);
-    }
+		$this->assertInstanceOf(C::class, $c);
+		$this->assertInstanceOf(B::class, $c->b);
+		$this->assertInstanceOf(A::class, $c->b->a);
+		$this->assertEquals($a, $c->a);
+	}
 
-    public function testCall() {
-        $provider = new Container();
+	public function testCall()
+	{
+		$provider = new Container();
 
-        $c = $provider->call(function (C $c) {
-            $this->assertInstanceOf(C::class, $c);
-            $this->assertInstanceOf(B::class, $c->b);
-            $this->assertInstanceOf(A::class, $c->b->a);
-        });
-    }
+		$c = $provider->call(function (C $c) {
+			$this->assertInstanceOf(C::class, $c);
+			$this->assertInstanceOf(B::class, $c->b);
+			$this->assertInstanceOf(A::class, $c->b->a);
+		});
+	}
 
 	public function testCallOnObjects() 
 	{
@@ -107,36 +114,48 @@ class ProviderTest extends TestCase
 
 		$c = $provider->callMethod($test, 'method', ['str' => 'Hello world']);
 		$this->assertEquals(false, $c);
-    }
+	}
 
-    public function testInvalidDependency() {
-        $provider = new Container();
+	public function testInvalidDependency()
+	{
+		$provider = new Container();
 
-        $this->expectException(NotFoundException::class);
-        $e = $provider->get(E::class);
+		$this->expectException(NotFoundException::class);
+		$e = $provider->get(E::class);
 	}
 	
-	public function testFactories() {
+	public function testFactories()
+	{
 		$invoked  = false;
 		$provider = new Container();
-		$provider->factory(A::class, function () use (&$invoked) { $invoked = true; return new A(); });
+		$provider->factory(A::class, function () use (&$invoked) {
+			$invoked = true;
+			return new A();
+		});
 		$provider->get(A::class);
 		
 		$this->assertEquals(true, $invoked);
 	}
 	
-	public function testFactoriesInherited() {
+	public function testFactoriesInherited()
+	{
 		$invoked  = false;
 		$provider = new Container();
-		$provider->factory(A::class, function () use (&$invoked) { $invoked = true; return new A(); });
+		$provider->factory(A::class, function () use (&$invoked) {
+			$invoked = true;
+			return new A();
+		});
 		$provider->get(B::class);
 		
 		$this->assertEquals(true, $invoked);
 	}
 	
-	public function testSingleton() {
+	public function testSingleton()
+	{
 		$provider = new Container();
-		$provider->singleton(A::class, function () { return new A(); });
+		$provider->singleton(A::class, function () {
+			return new A();
+		});
 		
 		$b1 = $provider->get(B::class);
 		$b2 = $provider->get(B::class);
@@ -145,7 +164,8 @@ class ProviderTest extends TestCase
 		$this->assertEquals(true, $b1->a === $b2->a);
 	}
 	
-	public function testPartials() {
+	public function testPartials()
+	{
 		$provider = new Container();
 		$provider->service(F::class)->with('hello', 'world');
 		
@@ -158,7 +178,8 @@ class ProviderTest extends TestCase
 	 * object to map to a certain service name, the object should always
 	 * be returned whenever the application requests the service.
 	 */
-	public function testInstances() {
+	public function testInstances()
+	{
 		$a = new A;
 		$a->a = time();
 		
@@ -243,5 +264,4 @@ class ProviderTest extends TestCase
 		$this->assertEquals('hello', $c->b->a->a);
 		$this->assertEquals('', $c->a->a);
 	}
-
 }

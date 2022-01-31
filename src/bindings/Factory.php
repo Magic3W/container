@@ -22,5 +22,4 @@ class Factory implements BindingInterface
 	{
 		return $container->call($this->factory);
 	}
-	
 }

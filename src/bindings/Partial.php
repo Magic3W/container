@@ -20,7 +20,7 @@ use spitfire\provider\NotFoundException;
  */
 class Partial implements BindingInterface
 {
-
+	
 	/**
 	 * The name of the class to be instanced
 	 * 
@@ -47,7 +47,7 @@ class Partial implements BindingInterface
 		$this->classname = $classname;
 		$this->parameters = $parameters;
 	}
-
+	
 	/**
 	 * Allows to generate expressive
 	 * 
@@ -59,15 +59,14 @@ class Partial implements BindingInterface
 	public function needs($name, $payload)
 	{
 		if (class_exists($name)) {
-
 			$reflection = new ReflectionClass($this->classname);
 			$method     = $reflection->getMethod('__construct');
 			$params     = $method->getParameters();
 			$found      = false;
-
+			
 			foreach ($params as $param) {
 				$type = $param->getType();
-
+				
 				if ($type instanceof ReflectionNamedType && $type->getName()) {
 					$this->parameters[$param->getName()] = $payload;
 					$found = true;
@@ -77,7 +76,7 @@ class Partial implements BindingInterface
 			if ($found) {
 				return $this;
 			}
-
+			
 			throw new NotFoundException(sprintf('Class %s does not depend on %s', $this->classname, $name));
 		} else {
 			throw new NotFoundException(sprintf('Class %s does not exist', $name));
@@ -98,13 +97,13 @@ class Partial implements BindingInterface
 		$this->parameters[$name] = $payload;
 		return $this;
 	}
-
+	
 	/**
 	 * Creates a new instance of the service.
 	 */
 	public function instance(Container $container): object
 	{
-
+		
 		/**
 		 * The service is not available, the class was not found, if we try to instance
 		 * the class, we will get a fatal error.
@@ -112,20 +111,22 @@ class Partial implements BindingInterface
 		if (!class_exists((string)$this->classname)) {
 			throw new NotFoundException(sprintf("Service %s was not found", $this->classname));
 		}
-
+		
 		try {
 			# Autowiring logic for the arguments
 			$reflection = new ReflectionClass($this->classname);
 			$method     = $reflection->getMethod('__construct');
 			$required   = $method->getParameters();
-
+			
 			$parameters = array_map(function (ReflectionParameter $e) use ($container) {
 				$name  = $e->getName();
-
+				
 				if (array_key_exists($name, $this->parameters)) {
-					return $this->parameters[$name] instanceof BindingInterface ? $this->parameters[$name]->instance($container) : $this->parameters[$name];
+					return $this->parameters[$name] instanceof BindingInterface ? 
+						$this->parameters[$name]->instance($container) : 
+						$this->parameters[$name];
 				}
-
+				
 				try {
 					$type = $e->getType();
 						
@@ -167,13 +168,13 @@ class Partial implements BindingInterface
 					if (!class_exists($name)) {
 						throw new NotFoundException(sprintf("Service %s was not found", $name));
 					}
-
+					
 					return $container->get($name);
 				} catch (ReflectionException $e) {
 					throw new NotFoundException($e->getMessage());
 				}
 			}, $required);
-
+			
 			return $reflection->newInstance(...$parameters);
 		}
 		/**

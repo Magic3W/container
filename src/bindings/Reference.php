@@ -12,30 +12,29 @@ use spitfire\provider\Container;
  */
 class Reference implements BindingInterface
 {
-
-    /**
-     * The key identifying the class or service within provider.
-     * 
-     * @var class-string
-     */
-    private $key;
-
+	
+	/**
+	 * The key identifying the class or service within provider.
+	 * 
+	 * @var class-string
+	 */
+	private $key;
+	
 	/**
 	 * 
 	 * @param class-string $key
 	 */
-    public function __construct($key)
-    {
-        $this->key = $key;
-    }
-
-    /**
-     * Performs a lookup on the linked container to locate the dependency or
-     * service and returns it.
-     */
-	public function instance(Container $container) : object
+	public function __construct($key)
 	{
-        return $container->get($this->key);
+		$this->key = $key;
 	}
 	
+	/**
+	 * Performs a lookup on the linked container to locate the dependency or
+	 * service and returns it.
+	 */
+	public function instance(Container $container) : object
+	{
+		return $container->get($this->key);
+	}
 }
