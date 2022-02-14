@@ -16,6 +16,8 @@ use spitfire\provider\NotFoundException;
  * class cannot be assembled. Instead, the container will need to provide missing
  * pieces.
  * 
+ * @template T of object
+ * @implements BindingInterface<T>
  * @author César de la Cal Bretschneider
  */
 class Partial implements BindingInterface
@@ -24,7 +26,7 @@ class Partial implements BindingInterface
 	/**
 	 * The name of the class to be instanced
 	 * 
-	 * @var class-string
+	 * @var class-string<T>
 	 */
 	private $classname;
 	
@@ -39,7 +41,7 @@ class Partial implements BindingInterface
 	 * Create a service. This allows the application to resolve the
 	 * parameters for the given service.
 	 * 
-	 * @param class-string $classname
+	 * @param class-string<T> $classname
 	 * @param mixed[] $parameters
 	 */
 	public function __construct($classname, $parameters)
@@ -54,7 +56,7 @@ class Partial implements BindingInterface
 	 * @param string $name
 	 * @param object $payload
 	 * @throws NotFoundException
-	 * @return Partial
+	 * @return Partial<T>
 	 */
 	public function needs($name, $payload)
 	{
@@ -90,7 +92,7 @@ class Partial implements BindingInterface
 	 * @param string $name
 	 * @param mixed $payload
 	 * @throws NotFoundException
-	 * @return Partial
+	 * @return Partial<T>
 	 */
 	public function with($name, $payload) : Partial
 	{
@@ -100,6 +102,9 @@ class Partial implements BindingInterface
 	
 	/**
 	 * Creates a new instance of the service.
+	 * 
+	 * @param Container $container
+	 * @return T
 	 */
 	public function instance(Container $container): object
 	{
@@ -174,6 +179,11 @@ class Partial implements BindingInterface
 					throw new NotFoundException($e->getMessage());
 				}
 			}, $required);
+			
+			assert(
+				$reflection->isSubclassOf($this->classname) || $reflection->getName() === $this->classname, 
+				sprintf("Expected %s, found %s", $reflection->getName(), $this->classname)
+			);
 			
 			return $reflection->newInstance(...$parameters);
 		}
