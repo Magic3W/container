@@ -1,8 +1,10 @@
 <?php namespace spitfire\provider;
 
+use BadMethodCallException;
 use Closure;
 use ReflectionClass;
 use ReflectionFunction;
+use ReflectionMethod;
 use ReflectionNamedType;
 use ReflectionParameter;
 use spitfire\provider\bindings\Factory;
@@ -31,7 +33,7 @@ class Container implements \Psr\Container\ContainerInterface
 	
 	/**
 	 * 
-	 * @var BindingInterface[]
+	 * @var BindingInterface<object>[]
 	 */
 	private $items = [];
 	
@@ -52,10 +54,13 @@ class Container implements \Psr\Container\ContainerInterface
 	 * Please note that you MUST NOT provide user input to this method, this
 	 * is very dangerous.
 	 * 
-	 * @param class-string $id
+	 * @template T of object
+	 * @param class-string<T> $id
+	 * @return T
+	 * 
 	 * @throws NotFoundException
 	 */
-	public function get($id)
+	public function get(string $id) : object
 	{
 		/**
 		 * Check if there is a service registered for this
@@ -67,7 +72,14 @@ class Container implements \Psr\Container\ContainerInterface
 			 * in production should not need to perform this check every time.
 			 */
 			assert($this->items[$id] instanceof BindingInterface);
-			return $this->items[$id]->instance($this);
+			
+			/**
+			 * Retrieve the instance and ensure that it's the right type for returning.
+			 */
+			$instance = $this->items[$id]->instance($this);
+			assert($instance instanceof $id);
+			
+			return $instance;
 		}
 		
 		if ($this->prototype) {
@@ -91,8 +103,10 @@ class Container implements \Psr\Container\ContainerInterface
 	 * Please note that you MUST NOT provide user input to this method, this
 	 * is very dangerous.
 	 * 
-	 * @param class-string $id
+	 * @template T of object
+	 * @param class-string<T> $id
 	 * @param Container $container
+	 * @return T
 	 * @throws NotFoundException
 	 */
 	public function getIn($id, Container $container): object
@@ -107,7 +121,14 @@ class Container implements \Psr\Container\ContainerInterface
 			 * in production should not need to perform this check every time.
 			 */
 			assert($this->items[$id] instanceof BindingInterface);
-			return $this->items[$id]->instance($container);
+			
+			/**
+			 * Make sure that the item we received also fits the requirements for the container
+			 */
+			$instance = $this->items[$id]->instance($container);
+			assert($instance instanceof $id);
+			
+			return $instance;
 		}
 		
 		if ($this->prototype) {
@@ -149,8 +170,9 @@ class Container implements \Psr\Container\ContainerInterface
 	
 	/**
 	 * 
-	 * @param string $id
-	 * @return Partial
+	 * @template L of object
+	 * @param class-string<L> $id
+	 * @return Partial<L>
 	 */
 	public function service(string $id): Partial
 	{
@@ -199,7 +221,7 @@ class Container implements \Psr\Container\ContainerInterface
 	 * @param string $id
 	 * @return bool
 	 */
-	public function has($id)
+	public function has($id) : bool
 	{
 		/**
 		 * If the service to be provided was registered, we can immediately
@@ -235,12 +257,21 @@ class Container implements \Psr\Container\ContainerInterface
 	 * set of requirements, similar to how Javascript DI works, and our container
 	 * will provide the right arguments for the task.
 	 * 
-	 * @param Closure $fn
+	 * @param callable $fn
 	 * @return mixed The result of the function
 	 */
-	public function call(Closure $fn)
+	public function call(callable $fn)
 	{
-		$reflection = new ReflectionFunction($fn);
+		if (is_array($fn)) {
+			$reflection = new ReflectionMethod(...$fn);
+		}
+		elseif ($fn instanceof Closure || is_string($fn)) {
+			$reflection = new ReflectionFunction($fn);
+		}
+		else {
+			throw new BadMethodCallException('Bad argument passed to Container::call', 210214);
+		}
+		
 		$parameters = array_map(function (ReflectionParameter $e) {
 			
 			#Get the named type to build. It is impossible for us to build anonymous types
@@ -300,8 +331,9 @@ class Container implements \Psr\Container\ContainerInterface
 	/**
 	 * Creates a reference to a service inside this container.
 	 * 
-	 * @param class-string $id The identifier for the service
-	 * @return Reference to the service
+	 * @template L of object
+	 * @param class-string<L> $id The identifier for the service
+	 * @return Reference<L> to the service
 	 */
 	public function reference($id)
 	{

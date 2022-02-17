@@ -1,20 +1,24 @@
 <?php namespace spitfire\provider\bindings;
 
 use Closure;
-use spitfire\provider\BindingInterface;
 use spitfire\provider\Container;
 
+/**
+ * 
+ * @template T of object
+ * @extends Factory<T>
+ */
 class Singleton extends Factory
 {
 	
 	/**
 	 * 
-	 * @var object
+	 * @var T
 	 */
 	private $instance;
 	
 	/**
-	 * @return object
+	 * @return T
 	 */
 	public function instance(Container $provider) : object
 	{
