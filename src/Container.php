@@ -15,9 +15,9 @@ use spitfire\provider\bindings\Singleton;
 /**
  * Provider is a dependency injection mechanism. It allows your
  * application to request an instance of a certain class and it
- * will 'autowire' it so all the depencencies needed for the 
+ * will 'autowire' it so all the depencencies needed for the
  * object to function are already provided. Hence the name
- * 
+ *
  * @author César de la Cal Bretschneider
  */
 class Container implements \Psr\Container\ContainerInterface
@@ -25,14 +25,14 @@ class Container implements \Psr\Container\ContainerInterface
 	
 	/**
 	 * The prototype allows our service provider to override certain elements of another
-	 * service provider without 
-	 * 
+	 * service provider without
+	 *
 	 * @var Container|null
 	 */
 	private $prototype = null;
 	
 	/**
-	 * 
+	 *
 	 * @var BindingInterface<object>[]
 	 */
 	private $items = [];
@@ -41,7 +41,7 @@ class Container implements \Psr\Container\ContainerInterface
 	{
 		$this->prototype = $prototype;
 		
-		$this->items[\Psr\Container\ContainerInterface::class] = 
+		$this->items[\Psr\Container\ContainerInterface::class] =
 		$this->items[Container::class] = new Singleton(function () {
 			return $this;
 		});
@@ -52,14 +52,14 @@ class Container implements \Psr\Container\ContainerInterface
 	 * provides. Please note that attempts to retrieve a service unknown to the
 	 * container will result in the container attempting to assemble the required
 	 * class regardless.
-	 * 
+	 *
 	 * Please note that you MUST NOT provide user input to this method, this
 	 * is very dangerous.
-	 * 
+	 *
 	 * @template T of object
 	 * @param class-string<T> $id
 	 * @return T
-	 * 
+	 *
 	 * @throws NotFoundException
 	 */
 	public function get(string $id) : object
@@ -101,10 +101,10 @@ class Container implements \Psr\Container\ContainerInterface
 	 * provides. Please note that attempts to retrieve a service unknown to the
 	 * container will result in the container attempting to assemble the required
 	 * class regardless.
-	 * 
+	 *
 	 * Please note that you MUST NOT provide user input to this method, this
 	 * is very dangerous.
-	 * 
+	 *
 	 * @template T of object
 	 * @param class-string<T> $id
 	 * @param Container $container
@@ -147,7 +147,7 @@ class Container implements \Psr\Container\ContainerInterface
 	
 	/**
 	 * The set method allows the application to define a service for a certain key.
-	 * 
+	 *
 	 * @param string $id   The key / classname the service should be located at
 	 * @param mixed  $item The service. May be an instance of a class, a string containing a classname, or a service
 	 * @return Container
@@ -171,7 +171,7 @@ class Container implements \Psr\Container\ContainerInterface
 	
 	
 	/**
-	 * 
+	 *
 	 * @template L of object
 	 * @param class-string<L> $id
 	 * @return Partial<L>
@@ -191,7 +191,7 @@ class Container implements \Psr\Container\ContainerInterface
 	}
 	
 	/**
-	 * 
+	 *
 	 * @param string $id
 	 * @param Closure $callable
 	 * @return Container
@@ -204,7 +204,7 @@ class Container implements \Psr\Container\ContainerInterface
 	
 	
 	/**
-	 * 
+	 *
 	 * @param string $id
 	 * @param Closure $callable
 	 * @return Container
@@ -217,9 +217,9 @@ class Container implements \Psr\Container\ContainerInterface
 	
 	/**
 	 * Checks if the provider can find a service that it can assemble. This does
-	 * not imply that a call to get will be smooth, get may still run into a 
+	 * not imply that a call to get will be smooth, get may still run into a
 	 * \Psr\Container\ContainerExceptionInterface
-	 * 
+	 *
 	 * @param string $id
 	 * @return bool
 	 */
@@ -243,7 +243,7 @@ class Container implements \Psr\Container\ContainerInterface
 	/**
 	 * Uses the container as a factory, you provide arguments that may not be
 	 * automatically resolved or you wish to override.
-	 * 
+	 *
 	 * @param class-string $id
 	 * @param mixed[] $parameters
 	 * @return object
@@ -258,7 +258,7 @@ class Container implements \Psr\Container\ContainerInterface
 	 * Call makes it possible for applications to pass a closure with a certain
 	 * set of requirements, similar to how Javascript DI works, and our container
 	 * will provide the right arguments for the task.
-	 * 
+	 *
 	 * @param callable $fn
 	 * @return mixed The result of the function
 	 */
@@ -292,14 +292,14 @@ class Container implements \Psr\Container\ContainerInterface
 	}
 	
 	/**
-	 * Invokes a method on an object, providing all the dependencies necessary to 
+	 * Invokes a method on an object, providing all the dependencies necessary to
 	 * make the method work.
-	 * 
+	 *
 	 * This method is a bad candidate for classes where you already know the name
 	 * of the method being executed (since it makes it hard for IDEs to find usages)
 	 * but it is a good replacement for any situation where you were forced to use
 	 * a construct like `user_func_array` to invoke a method.
-	 * 
+	 *
 	 * @param object $object
 	 * @param string $method
 	 * @param mixed[] $params
@@ -332,7 +332,7 @@ class Container implements \Psr\Container\ContainerInterface
 	
 	/**
 	 * Creates a reference to a service inside this container.
-	 * 
+	 *
 	 * @template L of object
 	 * @param class-string<L> $id The identifier for the service
 	 * @return Reference<L> to the service
