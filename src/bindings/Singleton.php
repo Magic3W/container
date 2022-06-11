@@ -4,7 +4,7 @@ use Closure;
 use spitfire\provider\Container;
 
 /**
- * 
+ *
  * @template T of object
  * @extends Factory<T>
  */
@@ -12,7 +12,7 @@ class Singleton extends Factory
 {
 	
 	/**
-	 * 
+	 *
 	 * @var T
 	 */
 	private $instance;

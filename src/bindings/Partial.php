@@ -9,13 +9,13 @@ use spitfire\provider\Container;
 use spitfire\provider\NotFoundException;
 
 /**
- * A partial is a reference to a class and a series of parameters that can be 
+ * A partial is a reference to a class and a series of parameters that can be
  * instanced with Provider.
- * 
- * It's called partial because, with the given resources, an instance of the 
+ *
+ * It's called partial because, with the given resources, an instance of the
  * class cannot be assembled. Instead, the container will need to provide missing
  * pieces.
- * 
+ *
  * @template T of object
  * @implements BindingInterface<T>
  * @author César de la Cal Bretschneider
@@ -25,14 +25,14 @@ class Partial implements BindingInterface
 	
 	/**
 	 * The name of the class to be instanced
-	 * 
+	 *
 	 * @var class-string<T>
 	 */
 	private $classname;
 	
 	/**
 	 * The parameters passed to the class' constructor.
-	 * 
+	 *
 	 * @var mixed
 	 */
 	private $parameters;
@@ -40,7 +40,7 @@ class Partial implements BindingInterface
 	/**
 	 * Create a service. This allows the application to resolve the
 	 * parameters for the given service.
-	 * 
+	 *
 	 * @param class-string<T> $classname
 	 * @param mixed[] $parameters
 	 */
@@ -52,7 +52,7 @@ class Partial implements BindingInterface
 	
 	/**
 	 * Allows to generate expressive
-	 * 
+	 *
 	 * @param string $name
 	 * @param object $payload
 	 * @throws NotFoundException
@@ -88,7 +88,7 @@ class Partial implements BindingInterface
 	/**
 	 * The with method allows the user to determine defaults to be applied to a
 	 * certain class' parameters.
-	 * 
+	 *
 	 * @param string $name
 	 * @param mixed $payload
 	 * @throws NotFoundException
@@ -102,7 +102,7 @@ class Partial implements BindingInterface
 	
 	/**
 	 * Creates a new instance of the service.
-	 * 
+	 *
 	 * @param Container $container
 	 * @return T
 	 */
@@ -127,8 +127,8 @@ class Partial implements BindingInterface
 				$name  = $e->getName();
 				
 				if (array_key_exists($name, $this->parameters)) {
-					return $this->parameters[$name] instanceof BindingInterface ? 
-						$this->parameters[$name]->instance($container) : 
+					return $this->parameters[$name] instanceof BindingInterface ?
+						$this->parameters[$name]->instance($container) :
 						$this->parameters[$name];
 				}
 				
@@ -136,24 +136,24 @@ class Partial implements BindingInterface
 					$type = $e->getType();
 						
 					/**
-					 * PHP doesn't require the developer of a class to explicitly determine the 
-					 * types of the arguments. If this is the case, we cannot help the instancing 
+					 * PHP doesn't require the developer of a class to explicitly determine the
+					 * types of the arguments. If this is the case, we cannot help the instancing
 					 * of the class beyond using a default if available.
 					 */
-					if (!($type instanceof ReflectionNamedType)) { 
+					if (!($type instanceof ReflectionNamedType)) {
 						/**
 						 * If the developer didn't explicitly set the type, we check if they provided a
-						 * default value that the application can use to invoke the object. 
-						 * 
+						 * default value that the application can use to invoke the object.
+						 *
 						 * This is for methods that look like this: `public function __construct($t = 'hello')`
-						 * 
+						 *
 						 * Notice in the example that $t does not have a type declaration.
 						 */
 						if ($e->isDefaultValueAvailable()) {
 							return $e->getDefaultValue();
 						}
 						
-						throw new NotFoundException('Anonymous types cannot be resolved'); 
+						throw new NotFoundException('Anonymous types cannot be resolved');
 					}
 					
 					/**
@@ -181,7 +181,7 @@ class Partial implements BindingInterface
 			}, $required);
 			
 			assert(
-				$reflection->isSubclassOf($this->classname) || $reflection->getName() === $this->classname, 
+				$reflection->isSubclassOf($this->classname) || $reflection->getName() === $this->classname,
 				sprintf("Expected %s, found %s", $reflection->getName(), $this->classname)
 			);
 			

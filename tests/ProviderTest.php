@@ -56,7 +56,7 @@ class F
 
 class G
 {
-	public function __construct(string $t = 'hello', A $a)
+	public function __construct(A $a, string $t = 'hello')
 	{
 	}
 }
@@ -65,7 +65,7 @@ class H
 {
 	public $t;
 	
-	public function __construct($t = 'hello', A $a)
+	public function __construct(A $a, $t = 'hello')
 	{
 		$this->t = $t;
 	}

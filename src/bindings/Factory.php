@@ -5,7 +5,7 @@ use spitfire\provider\BindingInterface;
 use spitfire\provider\Container;
 
 /**
- * 
+ *
  * @template T of object
  * @implements BindingInterface<T>
  */
@@ -13,13 +13,13 @@ class Factory implements BindingInterface
 {
 	
 	/**
-	 * 
+	 *
 	 * @var callable():T
 	 */
 	private $factory;
 	
 	/**
-	 * 
+	 *
 	 * @param callable():T $factory
 	 */
 	public function __construct(callable $factory)
@@ -28,7 +28,7 @@ class Factory implements BindingInterface
 	}
 	
 	/**
-	 * 
+	 *
 	 * @return T
 	 */
 	public function instance(Container $container) : object
