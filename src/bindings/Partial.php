@@ -170,7 +170,7 @@ class Partial implements BindingInterface
 					 * If the class we're trying to locate is unavailable, we will not continue, since
 					 * it will obviously produce no valid result.
 					 */
-					if (!class_exists($name)) {
+					if (!class_exists($name) && !interface_exists($name)) {
 						throw new NotFoundException(sprintf("Service %s was not found", $name));
 					}
 					

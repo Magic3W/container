@@ -178,7 +178,7 @@ class Container implements \Psr\Container\ContainerInterface
 	 */
 	public function service(string $id): Partial
 	{
-		if (!isset($this->items[$id]) && class_exists($id)) {
+		if (!isset($this->items[$id]) && (class_exists($id) || interface_exists($id))) {
 			$item = new Partial($id, []);
 			$this->items[$id] = $item;
 		}
