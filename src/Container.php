@@ -254,15 +254,17 @@ class Container implements \Psr\Container\ContainerInterface
 		return $service->instance($this);
 	}
 	
+	
 	/**
 	 * Call makes it possible for applications to pass a closure with a certain
 	 * set of requirements, similar to how Javascript DI works, and our container
 	 * will provide the right arguments for the task.
 	 *
 	 * @param callable $fn
+	 * @param mixed[] $params
 	 * @return mixed The result of the function
 	 */
-	public function call(callable $fn)
+	public function call(callable $fn, array $params = [])
 	{
 		if (is_array($fn)) {
 			$reflection = new ReflectionMethod(...$fn);
@@ -274,7 +276,12 @@ class Container implements \Psr\Container\ContainerInterface
 			throw new BadMethodCallException('Bad argument passed to Container::call', 210214);
 		}
 		
-		$parameters = array_map(function (ReflectionParameter $e) {
+		$parameters = array_map(function (ReflectionParameter $e) use ($params) {
+			
+			#If the parameter was provided as an override by the user, we can just use that
+			if (array_key_exists($e->getName(), $params)) {
+				return $params[$e->getName()];
+			}
 			
 			#Get the named type to build. It is impossible for us to build anonymous types
 			$type = $e->getType();
