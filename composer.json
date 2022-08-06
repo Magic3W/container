@@ -12,6 +12,9 @@
 			"./vendor/bin/phpcs ./src/ -s",
 			"./vendor/bin/phpstan analyse --level 7 src/",
 			"./vendor/bin/phpunit tests/"
+		],
+		"style" : [
+			"./vendor/bin/phpcbf ./src/ -s"
 		]
 	},
     "autoload" : {
