@@ -4,6 +4,8 @@ use ReflectionClass;
 use ReflectionException;
 use ReflectionNamedType;
 use ReflectionParameter;
+use spitfire\provider\attributes\DefaultImplementation;
+use spitfire\provider\Autowire;
 use spitfire\provider\BindingInterface;
 use spitfire\provider\Container;
 use spitfire\provider\NotFoundException;
@@ -120,72 +122,13 @@ class Partial implements BindingInterface
 		try {
 			# Autowiring logic for the arguments
 			$reflection = new ReflectionClass($this->classname);
-			$method     = $reflection->getMethod('__construct');
-			$required   = $method->getParameters();
-			
-			$parameters = array_map(function (ReflectionParameter $e) use ($container) {
-				$name  = $e->getName();
-				
-				if (array_key_exists($name, $this->parameters)) {
-					return $this->parameters[$name] instanceof BindingInterface ?
-						$this->parameters[$name]->instance($container) :
-						$this->parameters[$name];
-				}
-				
-				try {
-					$type = $e->getType();
-						
-					/**
-					 * PHP doesn't require the developer of a class to explicitly determine the
-					 * types of the arguments. If this is the case, we cannot help the instancing
-					 * of the class beyond using a default if available.
-					 */
-					if (!($type instanceof ReflectionNamedType)) {
-						/**
-						 * If the developer didn't explicitly set the type, we check if they provided a
-						 * default value that the application can use to invoke the object.
-						 *
-						 * This is for methods that look like this: `public function __construct($t = 'hello')`
-						 *
-						 * Notice in the example that $t does not have a type declaration.
-						 */
-						if ($e->isDefaultValueAvailable()) {
-							return $e->getDefaultValue();
-						}
-						
-						throw new NotFoundException('Anonymous types cannot be resolved');
-					}
-					
-					/**
-					 * In case we have a built-in type that does not require being set by the user
-					 * because a default value is available, we resort to using that.
-					 */
-					if ($type->isBuiltin() && $e->isDefaultValueAvailable()) {
-						return $e->getDefaultValue();
-					}
-					
-					$name = $type->getName();
-					
-					/**
-					 * If the class we're trying to locate is unavailable, we will not continue, since
-					 * it will obviously produce no valid result.
-					 */
-					if (!class_exists($name) && !interface_exists($name)) {
-						throw new NotFoundException(sprintf("Service %s was not found", $name));
-					}
-					
-					return $container->get($name);
-				} catch (ReflectionException $e) {
-					throw new NotFoundException($e->getMessage());
-				}
-			}, $required);
 			
 			assert(
 				$reflection->isSubclassOf($this->classname) || $reflection->getName() === $this->classname,
 				sprintf("Expected %s, found %s", $reflection->getName(), $this->classname)
 			);
 			
-			return $reflection->newInstance(...$parameters);
+			return (new Autowire($container))->class($reflection, $this->parameters);
 		}
 		/**
 		 * If the class does not have a constructor the reflection of __construct
