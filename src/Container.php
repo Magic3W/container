@@ -283,6 +283,12 @@ class Container implements \Psr\Container\ContainerInterface
 				return $params[$e->getName()];
 			}
 			
+			# Container will only resolve required parameters. This means that if the param
+			# is optional, we will not feel compelled to resolve it.
+			if ($e->isOptional()) {
+				return $e->getDefaultValue();
+			}
+			
 			#Get the named type to build. It is impossible for us to build anonymous types
 			$type = $e->getType();
 			if (!($type instanceof ReflectionNamedType)) {
