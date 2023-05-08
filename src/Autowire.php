@@ -2,7 +2,6 @@
 
 use ReflectionClass;
 use ReflectionException;
-use ReflectionMethod;
 use ReflectionNamedType;
 use ReflectionParameter;
 use spitfire\provider\attributes\DefaultImplementation;
@@ -10,9 +9,17 @@ use spitfire\provider\attributes\DefaultImplementation;
 class Autowire
 {
 	
-	public function __construct(
-		private Container $container
-	) {
+	/**
+	 * The container to look in for components that may be needed for autowiring
+	 * the current component.
+	 *
+	 * @var Container
+	 */
+	private Container $container;
+	
+	public function __construct(Container $container)
+	{
+		$this->container = $container;
 	}
 	
 	/**
