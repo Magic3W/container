@@ -3,19 +3,22 @@
 use Attribute;
 use ReflectionClass;
 
+/**
+ * @template T
+ */
 #[Attribute(Attribute::TARGET_CLASS)]
 class DefaultImplementation
 {
 	
 	/**
 	 *
-	 * @var class-string
+	 * @var class-string<T>
 	 */
 	private string $implementation;
 	
 	/**
 	 *
-	 * @param class-string $implementation
+	 * @param class-string<T> $implementation
 	 */
 	public function __construct(string $implementation)
 	{
@@ -24,7 +27,7 @@ class DefaultImplementation
 	
 	/**
 	 *
-	 * @return class-string
+	 * @return class-string<T>
 	 */
 	public function getImplementation() : string
 	{
@@ -33,8 +36,9 @@ class DefaultImplementation
 	
 	/**
 	 *
-	 * @param class-string $interface
-	 * @return DefaultImplementation
+	 * @template P of object
+	 * @param class-string<P> $interface
+	 * @return DefaultImplementation<P>
 	 */
 	public static function for(string $interface) :? DefaultImplementation
 	{

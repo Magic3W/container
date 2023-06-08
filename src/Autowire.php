@@ -57,6 +57,12 @@ class Autowire
 	{
 		$name  = $e->getName();
 		
+		# Container will only resolve required parameters. This means that if the param
+		# is optional, we will not feel compelled to resolve it.
+		if ($e->isDefaultValueAvailable()) {
+			return $e->getDefaultValue();
+		}
+		
 		try {
 			$type = $e->getType();
 			
@@ -66,27 +72,7 @@ class Autowire
 			 * of the class beyond using a default if available.
 			 */
 			if (!($type instanceof ReflectionNamedType)) {
-				/**
-				 * If the developer didn't explicitly set the type, we check if they provided a
-				 * default value that the application can use to invoke the object.
-				 *
-				 * This is for methods that look like this: `public function __construct($t = 'hello')`
-				 *
-				 * Notice in the example that $t does not have a type declaration.
-				 */
-				if ($e->isDefaultValueAvailable()) {
-					return $e->getDefaultValue();
-				}
-				
 				throw new NotFoundException('Anonymous types cannot be resolved');
-			}
-			
-			/**
-			 * In case we have a built-in type that does not require being set by the user
-			 * because a default value is available, we resort to using that.
-			 */
-			if ($type->isBuiltin() && $e->isDefaultValueAvailable()) {
-				return $e->getDefaultValue();
 			}
 			
 			$name = $type->getName();
@@ -103,16 +89,28 @@ class Autowire
 				return $this->container->get($name);
 			}
 			catch (NotFoundException $e) {
-				$attribute  = DefaultImplementation::for($name);
-				
-				if ($attribute === null) {
-					throw new NotFoundException(sprintf('Service %s was not found', $name), 0, $e);
-				}
-				
-				return $this->container->get($attribute->getImplementation());
+				return $this->findImplementation($name);
 			}
 		} catch (ReflectionException $e) {
 			throw new NotFoundException($e->getMessage());
 		}
+	}
+	
+	/**
+	 *
+	 * @template T of object
+	 * @param class-string<T> $interfaceName
+	 * @return T
+	 */
+	private function findImplementation(string $interfaceName)
+	{
+		
+		$attribute  = DefaultImplementation::for($interfaceName);
+		
+		if ($attribute === null) {
+			throw new NotFoundException(sprintf('Service %s was not found', $interfaceName), 0);
+		}
+		
+		return $this->container->get($attribute->getImplementation());
 	}
 }

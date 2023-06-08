@@ -267,7 +267,7 @@ class Container implements \Psr\Container\ContainerInterface
 	public function call(callable $fn, array $params = [])
 	{
 		if (is_array($fn)) {
-			$reflection = new ReflectionMethod(...$fn);
+			$reflection = new ReflectionMethod($fn[0], $fn[1]);
 		}
 		elseif ($fn instanceof Closure || is_string($fn)) {
 			$reflection = new ReflectionFunction($fn);
@@ -276,29 +276,15 @@ class Container implements \Psr\Container\ContainerInterface
 			throw new BadMethodCallException('Bad argument passed to Container::call', 210214);
 		}
 		
-		$parameters = array_map(function (ReflectionParameter $e) use ($params) {
+		$autowire   = new Autowire($this);
+		$parameters = array_map(function (ReflectionParameter $e) use ($autowire, $params) {
 			
 			#If the parameter was provided as an override by the user, we can just use that
 			if (array_key_exists($e->getName(), $params)) {
 				return $params[$e->getName()];
 			}
 			
-			# Container will only resolve required parameters. This means that if the param
-			# is optional, we will not feel compelled to resolve it.
-			if ($e->isOptional()) {
-				return $e->getDefaultValue();
-			}
-			
-			#Get the named type to build. It is impossible for us to build anonymous types
-			$type = $e->getType();
-			if (!($type instanceof ReflectionNamedType)) {
-				throw new NotFoundException('Unnamed types cannot be resolved by provider');
-			}
-			
-			$name = $type->getName();
-			assert(class_exists($name));
-			
-			return $this->get($name);
+			return $autowire->argument($e);
 		}, $reflection->getParameters());
 		
 		return $fn(...$parameters);
