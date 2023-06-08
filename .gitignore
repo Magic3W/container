@@ -1,2 +1,5 @@
 /vendor
 /phpmetrics
+/.phpunit.result.cache
+/infection.html
+/infection.log
