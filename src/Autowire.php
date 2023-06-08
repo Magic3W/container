@@ -42,9 +42,7 @@ class Autowire
 				return $this->argument($e);
 			}
 			
-			return $overrides[$name] instanceof BindingInterface ?
-				$overrides[$name]->instance($this->container) :
-				$overrides[$name];
+			return $overrides[$name];
 		}, $required);
 		
 		return $reflection->newInstance(...$parameters);
