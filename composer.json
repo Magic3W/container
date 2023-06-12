@@ -4,7 +4,7 @@
     "license": "MIT",
 
     "require": {
-        "php": ">7",
+        "php": "^8",
         "psr/container": "^2.0"
     },
 	"scripts": {
