@@ -321,7 +321,7 @@ class Container implements \Psr\Container\ContainerInterface
 			}
 			
 			$name = $type->getName();
-			assert(class_exists($name));
+			assert(class_exists($name) || interface_exists($name));
 			
 			return $this->get($name);
 		}, $reflection->getParameters());
